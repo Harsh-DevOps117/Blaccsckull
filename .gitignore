@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.expo/
+dist/
+coverage/
+uploads/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+docs/recordings/
+docs/browser-failure.png

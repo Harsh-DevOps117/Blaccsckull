@@ -1,0 +1,29 @@
+{
+  "name": "feedants-competition",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,APP -c cyan,magenta \"npm run dev -w @feedants/api\" \"npm run web -w @feedants/mobile\"",
+    "api": "npm run dev -w @feedants/api",
+    "mobile": "npm run start -w @feedants/mobile --",
+    "web": "npm run web -w @feedants/mobile",
+    "seed": "npm run seed -w @feedants/api",
+    "test": "npm run test -w @feedants/api",
+    "typecheck": "npm run typecheck --workspaces",
+    "build": "npm run build --workspaces",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "demo": "node scripts/demo.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "concurrently": "^9.2.1",
+    "prettier": "^3.9.8"
+  },
+  "engines": {
+    "node": "^22.13.0 || ^24.3.0 || >=25.0.0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Feedants",
+    "slug": "feedants-competitions",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "feedants",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.feedants.competitions"
+    },
+    "android": {
+      "package": "com.feedants.competitions"
+    },
+    "web": {
+      "bundler": "metro",
+      "name": "Feedants \u00b7 Classical Dance"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-document-picker",
+      "expo-video",
+      "expo-font",
+      "expo-status-bar",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
+  }
+}
