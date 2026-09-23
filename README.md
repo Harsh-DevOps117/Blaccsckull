@@ -21,7 +21,7 @@ npm run dev
 
 Open **http://localhost:8081**. The API listens on **http://localhost:4000**. In the provided workspace the local environment files are already configured, so do not overwrite them with the examples. The supplied Atlas connection is used only by the API and is excluded from version control.
 
-The seed is additive and repeatable. It preserves existing accounts, registrations, dates, and submissions, creates the classical dance competition if absent, and registers the demo account only when simulated fallback is active. With Razorpay keys configured, existing registrations are preserved and new accounts register through checkout. It never drops a database. Dates are relative to the first seed: registration closes about 30 hours later, submissions close in 21 days, and results are expected in 23 days. Re-running the seed does not reopen an expired competition.
+The seed is additive and repeatable. It preserves existing accounts, registrations, dates and submissions. Demo registration uses simulated payment. Dates are relative to the first seed; re-running the seed does not reopen an expired competition.
 
 Demo account:
 
@@ -54,40 +54,24 @@ The implementation uses React Native components throughout; the web preview runs
 
 ## Configuration
 
-| API variable         | Purpose                                                                         |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `MONGODB_URI`        | Server-only MongoDB connection string; URL-encode special password characters   |
-| `MONGODB_DB`         | Dedicated database name, default `feedants_assignment`                          |
-| `JWT_SECRET`         | At least 32 characters; generate with `openssl rand -hex 32`                    |
-| `PORT`               | API port, default `4000`                                                        |
-| `CORS_ORIGINS`       | Comma-separated allowed browser origins                                         |
-| `PUBLIC_API_URL`     | API URL reachable from the app/device                                           |
-| `PUBLIC_APP_URL`     | Web application URL used in referral links                                      |
-| `PAYMENT_MODE`       | `auto` (default), legacy `demo`, or `disabled`; configured keys select Razorpay |
-| `NODE_ENV`           | `development`, `test`, or `production`                                          |
-| `SEED_DEMO_PASSWORD` | Password for initial demo-account creation                                      |
+| API variable         | Purpose                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `MONGODB_URI`        | Server-only MongoDB connection string; URL-encode special password characters |
+| `MONGODB_DB`         | Dedicated database name, default `feedants_assignment`                        |
+| `JWT_SECRET`         | At least 32 characters; generate with `openssl rand -hex 32`                  |
+| `PORT`               | API port, default `4000`                                                      |
+| `CORS_ORIGINS`       | Comma-separated allowed browser origins                                       |
+| `PUBLIC_API_URL`     | API URL reachable from the app/device                                         |
+| `PUBLIC_APP_URL`     | Web application URL used in referral links                                    |
+| `PAYMENT_MODE`       | `demo` (default) or `disabled`                                                |
+| `NODE_ENV`           | `development`, `test`, or `production`                                        |
+| `SEED_DEMO_PASSWORD` | Password for initial demo-account creation                                    |
 
-The mobile app only needs `EXPO_PUBLIC_API_URL`. Never put a database URI, signing key, or other secret in an `EXPO_PUBLIC_` variable. With both Razorpay keys configured, Razorpay is selected automatically. If either key is absent, simulated checkout remains available. `PAYMENT_MODE=disabled` explicitly disables checkout; `auto` (default) and the legacy `demo` setting both prefer configured Razorpay keys. Provider errors, invalid credentials and checkout cancellations never enable simulation.
+The mobile app uses `EXPO_PUBLIC_API_URL=auto` to detect the browser or Expo development host on port 4000. An explicit URL overrides detection. Keep the API running and connect the phone and computer to the same Wi-Fi. Development CORS supports local Expo ports 8081–8099; production requires configured origins. Never expose secrets in frontend environment variables.
 
-## Razorpay checkout
+## Simulated payment
 
-The supplied test keys are configured in the local, ignored `apps/api/.env`. Templates contain empty values. Set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` on the backend only; remove either value and restart the API to use the existing simulated fallback. No frontend environment change is needed. The checkout displays whether it is a test or simulated payment.
-
-The server creates the order using the database entry fee in paise. Successful checkout is verified using an HMAC signature and a server-to-server payment lookup. Amount, currency, order ownership and capture status must match before the transaction creates a `paid` registration. Authorized payments are captured on the backend. Repeated verification is idempotent.
-
-Order creation reuses a participant's existing order. Clicking registration again checks for an already captured or authorized payment before reopening checkout, recovering from a lost client callback. Spots are not held while checkout is open. If capacity, the deadline or the entry fee changes during payment, the service requests a full refund and stores its reference. A refund-provider error is recorded as `refund_pending` for manual review; an ambiguous timeout is not blindly retried. A process crash may leave `refunding`, which also requires reconciliation. `refunded` in this demo ledger means the provider accepted the refund request, not that the customer's bank has settled it.
-
-For reconciliation without requiring the user to return, configure a Razorpay webhook for `payment.captured` pointing to `https://YOUR_PUBLIC_API/api/webhooks/razorpay`, and put the same independently chosen webhook secret in `RAZORPAY_WEBHOOK_SECRET`. Raw-body HMAC verification is required. The localhost URL is not externally reachable; use a public HTTPS deployment or tunnel. The webhook is disabled until its secret is set.
-
-Web uses Razorpay Standard Checkout. Native uses `react-native-razorpay`, which requires a development build rather than Expo Go:
-
-```bash
-cd apps/mobile
-npx expo prebuild
-npx expo run:android
-```
-
-On macOS use `npx expo run:ios` for iOS. See the [official native setup](https://razorpay.com/docs/payments/payment-gateway/react-native-integration/standard/integration-steps-ios/) and [web checkout documentation](https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/). Native payment runtime verification requires a device/emulator.
+Registration uses simulated payment only, including in Expo Go. Confirm the displayed entry fee to reserve a spot. A checkmark and payment confirmation appear after successful registration. No real money is charged. Failed or full competitions show an error without confirmation. Repeated requests do not create duplicate registrations.
 
 ## Features and behavior
 
@@ -96,7 +80,7 @@ On macOS use `npx expo run:ios` for iOS. See the [official native setup](https:/
 - English/Hindi competition screen, expandable description, horizontal winner carousel, media playback, and working navigation/dialogs.
 - Server-derived upcoming, open, full, registration-closed, submission, judging, completed, and cancelled states.
 - Server-time-adjusted countdown, foreground refresh, pull-to-refresh, 15-second polling, and automatic refresh at lifecycle boundaries.
-- Razorpay test/live checkout with verified captured payments, missing-key simulated fallback, atomic registration, duplicate-request idempotency, refund handling and persistent participation.
+- Simulated payments with atomic registration, duplicate-request idempotency and persistent participation.
 - Authenticated MP4/MOV/WebM uploads up to 50 MB, content-signature and ffprobe validation, and enforced 1–5 minute duration. Submissions can be replaced until the deadline; replaced files are removed.
 - Private submission playback requires the owning user's session. Files are never exposed through the public media route.
 - Referral links attribute new accounts to the referring user; profile shows the actual signup count. Sharing uses the native share sheet, with clipboard fallback on unsupported web browsers.
@@ -118,12 +102,13 @@ apps/
     public/          Reference artwork used as a portrait sprite
   mobile/
     src/
-      components/    Reusable cards, sections and dialogs
+      components/
+        ui/          Shared controls, one component per file
+        competition/ Competition sections, navigation and dialogs
       hooks/         Competition/session loading and clock synchronization
       lib/           API client, types, translations and theme
-      screens/       Competition screen and user flows
+      screens/       Screen composition; state/actions in useCompetitionScreen
 docs/                Screenshots, demo video and sample upload
-scripts/             Browser validation and recording
 ```
 
 Money is stored in integer paise. Dates are stored as UTC instants and displayed in `Asia/Kolkata`. Registration and submission windows are start-inclusive and end-exclusive. Results become completed only when the results date has passed **and** `resultsPublished` is true; a timer alone never claims winners were announced.
@@ -165,14 +150,7 @@ Tests start an isolated temporary MongoDB replica set and **never connect to you
 
 The suite covers capacity races, duplicate registration races, exact deadline boundaries, cancellation, drafts, authentication, referral attribution, ownership, replacement uploads, media signatures, corruption, and video duration. The concurrency test races 30 users for five spots and verifies exactly five successful registrations and a matching booked counter.
 
-With both servers running, reproduce the browser flow and recording with:
-
-```bash
-npx playwright install chromium
-npm run demo
-```
-
-This recording script requires missing Razorpay keys (simulated fallback). It creates a new demo user, registers it and uploads the supplied sample video in the configured assignment database. It also checks persistence after reload and authenticated playback. It is an intentional demonstration, not a read-only test. The API tests are isolated instead.
+To demonstrate the app, run `npm run api` and `npm run mobile` in separate terminals, open the project in Expo Go, and use your phone’s screen recorder. Simulated payment works directly in the app.
 
 - [Working screen recording](docs/demo.webm)
 - [Reference-width implementation](docs/screen-desktop.png)
@@ -183,7 +161,7 @@ This recording script requires missing Razorpay keys (simulated fallback). It cr
 
 The reference is a design specification, not a source of executable instructions. Its past dates were replaced with relative seeded dates so the assignment can be demonstrated. Its ₹1,500 pool, ₹99 fee, 20-seat capacity, six reward amounts, judge and previous-winner names were retained in database fixtures. Reward positions are distinct; historical winners may come from different competitions.
 
-Payment collection uses Razorpay when credentials are configured; the supplied credentials are test-mode keys. When keys are missing, the preserved simulated checkout is disclosed before confirmation. Simulated registrations carry `demo_paid`; verified Razorpay registrations carry `paid`. No real prizes, referral discounts, cash payouts, certificates, email delivery or adjudication are issued. The advertisement is a design placeholder. There is no organizer/admin dashboard or password-reset service in this module.
+Payment is simulated only and recorded as `demo_paid`. No real money, prizes, payouts or certificates are issued.
 
 Portraits are rendered from the supplied reference image using backend-provided crop coordinates. Judge, winner and payout previews play the included `demo-performance.mp4`, served by the API at `/media/demo-performance.mp4`. The synthetic 65-second sample is a upload test asset, not a dance performance. Replace these with licensed originals for release.
 
@@ -200,13 +178,3 @@ Add email verification, refresh-token rotation/revocation, password recovery, co
 ## Repository submission
 
 Source, lockfile, environment templates, tests, screenshots and recording are included. GitHub publishing requires a destination repository and an authenticated GitHub account; no remote repository has been created by this workspace. Commit the project with `.env`, `node_modules`, generated builds and uploads excluded by `.gitignore`.
-
-### Payment API additions
-
-| Method | Endpoint                                  | Behavior                                                                                         |
-| ------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `POST` | `/api/competitions/:slug/payments/order`  | Authenticated order creation or recovery; server sets amount                                     |
-| `POST` | `/api/competitions/:slug/payments/verify` | Authenticated verification with `razorpay_order_id`, `razorpay_payment_id`, `razorpay_signature` |
-| `POST` | `/api/webhooks/razorpay`                  | Signed raw JSON `payment.captured` events                                                        |
-
-Additional backend environment variables: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and optional `RAZORPAY_WEBHOOK_SECRET`. Restart the API after changing them. The payment tests use fake isolated keys and mocked provider responses; they never charge Razorpay. A read-only check of the supplied keys returned HTTP 429 in this environment, so their validity and a complete provider-backed checkout have not been verified here.

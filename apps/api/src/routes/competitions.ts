@@ -13,11 +13,9 @@ import { registerForCompetition } from '../services/registration.js';
 import { requireAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
 import { env, paymentMode } from '../config/env.js';
-import { createCheckout, verifyCheckout } from '../services/payments.js';
 
 export const competitionRouter = Router();
-const publicMediaUrl = (url?: string | null) =>
-  url?.startsWith('/') ? `${env.PUBLIC_API_URL.replace(/\/$/, '')}${url}` : url;
+const publicMediaUrl = (url?: string | null) => url;
 const uploadDirectory = path.resolve('uploads');
 await mkdir(uploadDirectory, { recursive: true });
 const upload = multer({
@@ -59,7 +57,7 @@ competitionRouter.get('/:slug', async (req, res) => {
         originalName: registration.submission.originalName,
         submittedAt: registration.submission.submittedAt,
         size: registration.submission.size,
-        videoUrl: `${env.PUBLIC_API_URL}/api/competitions/${slug}/submission`,
+        videoUrl: `/api/competitions/${slug}/submission`,
       }
     : null;
   res.set('Cache-Control', 'private, no-store').json({
@@ -86,25 +84,8 @@ competitionRouter.get('/:slug', async (req, res) => {
     action: actionFor(competition, !!registration, !!submission, now),
     serverTime: now.toISOString(),
     paymentMode: paymentMode(),
-    paymentTestMode: env.RAZORPAY_KEY_ID.startsWith('rzp_test_'),
-    media: { referenceUrl: `${env.PUBLIC_API_URL}/media/reference.png` },
+    media: { referenceUrl: '/media/reference.png' },
   });
-});
-
-competitionRouter.post('/:slug/payments/order', requireAuth, async (req, res) => {
-  res.json(await createCheckout(slugParam.parse(req.params.slug), req.userId!));
-});
-
-competitionRouter.post('/:slug/payments/verify', requireAuth, async (req, res) => {
-  const data = z
-    .object({
-      razorpay_order_id: z.string().regex(/^order_[a-zA-Z0-9]+$/),
-      razorpay_payment_id: z.string().regex(/^pay_[a-zA-Z0-9]+$/),
-      razorpay_signature: z.string().regex(/^[a-f0-9]{64}$/i),
-    })
-    .strict()
-    .parse(req.body);
-  res.json(await verifyCheckout(slugParam.parse(req.params.slug), req.userId!, data));
 });
 
 competitionRouter.post('/:slug/register', requireAuth, async (req, res) => {

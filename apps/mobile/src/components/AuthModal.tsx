@@ -80,11 +80,14 @@ export function AuthModal({
           onChangeText={setPassword}
           style={[styles.input, { paddingRight: 50 }]}
           secureTextEntry={!showPassword}
+          autoCapitalize="none"
+          autoCorrect={false}
           autoComplete={signup ? 'new-password' : 'current-password'}
           onSubmitEditing={submit}
         />
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
           onPress={() => setShowPassword(!showPassword)}
           style={{
             position: 'absolute',

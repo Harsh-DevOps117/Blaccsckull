@@ -1,10 +1,9 @@
+import { resolveApiUrl } from './connection';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000').replace(
-  /\/$/,
-  '',
-);
+export const API_URL = resolveApiUrl();
+export const mediaUrl = (url: string) => new URL(url, `${API_URL}/`).toString();
 let token: string | null = null;
 export const getToken = () => token;
 export async function restoreToken() {
@@ -57,7 +56,10 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     return body;
   } catch (error) {
     if (error instanceof RequestError) throw error;
-    throw new RequestError('Unable to reach Feedants. Check your connection and try again.', 0);
+    throw new RequestError(
+      `Unable to reach Feedants at ${API_URL}. Make sure the API is running and your devices use the same Wi-Fi.`,
+      0,
+    );
   } finally {
     clearTimeout(timeout);
   }

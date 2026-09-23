@@ -59,7 +59,6 @@ export type Details = {
   };
   action: { type: 'register' | 'upload' | 'disabled'; label: string };
   serverTime: string;
-  paymentMode: 'demo' | 'disabled' | 'razorpay';
-  paymentTestMode: boolean;
+  paymentMode: 'demo' | 'disabled';
   media: { referenceUrl: string };
 };

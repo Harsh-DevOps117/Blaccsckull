@@ -6,6 +6,3 @@ process.env.PAYMENT_MODE = 'demo';
 process.env.MONGOMS_DOWNLOAD_DIR = '/tmp/feedants-mongodb';
 process.env.MONGOMS_DISTRO = 'ubuntu-22.04';
 
-process.env.RAZORPAY_KEY_ID = '';
-process.env.RAZORPAY_KEY_SECRET = '';
-process.env.RAZORPAY_WEBHOOK_SECRET = '';

@@ -9,19 +9,18 @@ import { optionalAuth } from './middleware/auth.js';
 import { ApiError, errorHandler } from './middleware/errors.js';
 import { authRouter } from './routes/auth.js';
 import { competitionRouter } from './routes/competitions.js';
-import { webhookRouter } from './routes/webhooks.js';
+import { allowsOrigin } from './config/cors.js';
 
 export const app = express();
 app.disable('x-powered-by');
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
-app.use(cors());
+app.use(cors({ origin: (origin, callback) => callback(null, allowsOrigin(origin)) }));
 
 app.use((_req, res, next) => {
   res.set('X-Request-Id', randomUUID());
   next();
 });
-app.use('/api/webhooks', webhookRouter);
 app.use(express.json({ limit: '16kb' }));
 app.get('/health', (_req, res) => {
   const ready = mongoose.connection.readyState === 1;

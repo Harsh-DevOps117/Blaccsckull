@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { api, RequestError, restoreToken, saveToken } from '../lib/api';
+import { api, mediaUrl, RequestError, restoreToken, saveToken } from '../lib/api';
 import type { Details, User } from '../lib/types';
 
 export function useCompetition(slug: string) {
@@ -22,6 +22,17 @@ export function useCompetition(slug: string) {
         if (request !== generation.current) return;
         offset.current = new Date(result.serverTime).getTime() - (start + Date.now()) / 2;
         setNow(Date.now() + offset.current);
+        result.media.referenceUrl = mediaUrl(result.media.referenceUrl);
+        result.competition.judge.videoUrl = mediaUrl(result.competition.judge.videoUrl);
+        result.competition.payoutVideoUrl = mediaUrl(result.competition.payoutVideoUrl);
+        result.competition.winners = result.competition.winners.map((winner) => ({
+          ...winner,
+          videoUrl: mediaUrl(winner.videoUrl),
+        }));
+        if (result.participation?.submission)
+          result.participation.submission.videoUrl = mediaUrl(
+            result.participation.submission.videoUrl,
+          );
         setData(result);
         setError('');
       } catch (e) {

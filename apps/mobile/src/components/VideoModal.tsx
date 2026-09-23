@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, View } from 'react-native';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Sheet, Txt } from './ui';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { getToken } from '../lib/api';
 import { colors } from '../lib/theme';
+import { Sheet, Txt } from './ui';
 
 export function VideoModal({
   title,
